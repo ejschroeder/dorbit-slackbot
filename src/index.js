@@ -9,13 +9,14 @@ const debugSlackHook = require('debug')('dorbit-slackbot:slack-web-hook');
 
 const app = express();
 const slack = axios.create({
-	baseURL: process.env.SLACK_HOOK,
+	baseURL: process.env.SLACK_API_BASE_URL,
 	timeout: 5000,
 	headers: {
-		'Content-Type': 'application/json'
+		'Content-Type': 'application/json',
+    'Authorization': `Bearer ${process.env.SLACK_ACCESS_TOKEN}`
 	}
 });
-const slackDoorbellMessages = JSON.parse(process.env.SLACK_HOOK_DOORBELL_MESSAGES);
+const slackDoorbellMessages = JSON.parse(process.env.SLACK_DOORBELL_MESSAGES);
 
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use(bodyParser.json());
@@ -32,9 +33,17 @@ app.post('/ring', (req, res) => {
     debug("Event from source: " + source_id);
     res.sendStatus(200);
     let messageIndex = Math.floor(Math.random() * slackDoorbellMessages.length);
-    slack.post(process.env.SLACK_HOOK_DOORBELL, { 'text': slackDoorbellMessages[messageIndex] })
-      .then((response) => { debugSlackHook('Slack message sent!'); })
-      .catch(slackWebhookErrorHandle);
+
+    slack.post(process.env.SLACK_POST_MESSAGE_ENDPOINT, { 
+      'channel': '#doorbell',
+      'text': slackDoorbellMessages[messageIndex],
+      'icon_emoji': ':door:'
+    }).then((response) => { 
+      debugSlackHook('Slack request made!'); 
+      if (!response.data.ok) {
+        debugSlackHook('Slack responded with an error: ' + response.data.error);
+      }
+    }).catch(slackWebhookErrorHandle);
   } else {
     debug("Token received in ring payload was invalid.");
     res.sendStatus(500);
