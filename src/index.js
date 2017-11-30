@@ -74,6 +74,7 @@ app.post('/slack-ic', (req, res) => {
 
   if (token !== process.env.SLACK_VERIFICATION_TOKEN) {
     debugSlackHook("Token received does not match token from Slack");
+    debugSlackHook(req.body);
     res.sendStatus(403);
     return;
   }
