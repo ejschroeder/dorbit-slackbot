@@ -1,12 +1,13 @@
 require('dotenv').config();
 
 var proxy = require('redbird')({
+  port: 80,
   letsencrypt: {
     path: "/etc/ssl/private",
     port: 3000
   },
   ssl: {
-    port: 4443
+    port: 443
   }
 });
 
