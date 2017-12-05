@@ -1,7 +1,7 @@
 const debugSlackHook = require('debug')('dorbit-slackbot:slack-hook');
 
 module.exports = (req, res) => {
-  const { callback_id, user, token } = req.body;
+  const { callback_id, user, token } = JSON.parse(req.body.payload);
 
   if (token !== process.env.SLACK_VERIFICATION_TOKEN) {
     debugSlackHook("Token received does not match token from Slack");
