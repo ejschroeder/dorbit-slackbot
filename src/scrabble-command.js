@@ -4,7 +4,7 @@ const entities = new Entities();
 const VERIFICATION_TOKEN = process.env.SLACK_VERIFICATION_TOKEN;
 
 module.exports = (req, res) => {
-  const { token, text } = JSON.parse(req.body);
+  const { token, text } = req.body;
 
   if (token !== VERIFICATION_TOKEN) {
     debugSlackHook("Token received does not match token from Slack");
