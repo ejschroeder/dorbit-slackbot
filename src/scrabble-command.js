@@ -42,7 +42,8 @@ function replaceLettersWithScrabbleTiles(word) {
   var rawText = entities.decode(word);
   var lowerText = rawText.toLowerCase();
 
-  var result = lowerText.replace(/[a-z]/g, function(x) {
+  var strippedPunctuation = lowerText.replace(/\s?[^\w\s]|_/g, "");
+  var result = strippedPunctuation.replace(/[a-z]/g, function(x) {
     return ":" + x + "_scrabble:";
   });
 
