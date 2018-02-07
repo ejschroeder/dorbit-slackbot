@@ -15,6 +15,7 @@
     "debug": "^3.1.0",
     "dotenv": "^4.0.0",
     "express": "^4.16.2",
+    "html-entities": "^1.2.1",
     "redbird": "^0.7.0"
   }
 }
