@@ -5,7 +5,8 @@ const bodyParser = require('body-parser');
 const qs = require('querystring');
 const debugRouter = require('debug')('dorbit-slackbot:router');
 const handleRingEvent = require('./ring-event');
-const handleSlackWebhook = require('./slack-webhooks.js');
+const handleSlackWebhook = require('./slack-webhooks');
+const handleScrabbleCommand = require('./scrabble-command');
 
 const app = express();
 
@@ -20,6 +21,8 @@ app.get('/', (req, res) => {
 app.post('/ring', handleRingEvent);
 
 app.post('/slack-ic', handleSlackWebhook);
+
+app.post('/scrabblize', handleScrabbleCommand);
 
 app.listen(process.env.SLACKBOT_PORT, () => {
   debugRouter(`App listening on port ${process.env.SLACKBOT_PORT}...`);
