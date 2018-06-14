@@ -11,6 +11,11 @@ const slack = axios.create({
   }
 });
 
+const dorcam = axios.create({
+  baseURL: process.env.DORCAM_BASE_URL,
+  timeout: 5000
+})
+
 const slackDoorbellMessages = JSON.parse(process.env.SLACK_DOORBELL_MESSAGES);
 
 function slackApiErrorHandler(error) {
