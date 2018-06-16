@@ -33,8 +33,14 @@ module.exports = (req, res) => {
     res.sendStatus(200);
     let messageIndex = Math.floor(Math.random() * slackDoorbellMessages.length);
 
+    if (!process.env.SLACK_CHANNEL_ID) {
+      debugSlackApi('No channel id provided in environment'); 
+      res.send(500);
+      return;
+    }
+
     slack.post(process.env.SLACK_POST_MESSAGE_ENDPOINT, { 
-      'channel': 'C85CMN4AK',
+      'channel': process.env.SLACK_CHANNEL_ID,
       'icon_emoji': ':door:',
       'attachments': [
         {
