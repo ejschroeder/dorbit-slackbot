@@ -5,6 +5,7 @@ const config = require('../config');
 
 const SLACK_ACCESS_TOKEN = process.env.SLACK_ACCESS_TOKEN;
 const SOURCE_TOKEN = process.env.SOURCE_TOKEN;
+const DOMAIN = process.env.DOMAIN;
 
 const slack = axios.create({
   baseURL: config.slackApi.baseUrl,
@@ -17,7 +18,10 @@ const slack = axios.create({
 
 const dorcam = axios.create({
   baseURL: config.cameraApi.baseUrl,
-  timeout: 3000
+  timeout: 3000,
+  headers: {
+    'Content-Type': 'application/json'
+  }
 });
 
 function slackApiErrorHandler(error) {
@@ -40,6 +44,43 @@ function getRandomNotificationMessage() {
   return config.notificationMessages[messageIndex];
 }
 
+function postSlackMessage(imagePath) {
+  let payload = {
+    'channel': config.channelId,
+    'icon_emoji': ':door:',
+    'attachments': [
+      {
+        'fallback': 'Somebody is at the door!',
+        "mrkdwn_in": ["text"],
+        'attachment_type': 'default',
+        'callback_id': 'doorbell_claimed',
+        'color': 'warning',
+        'text': `*${getRandomNotificationMessage()}*`,
+        'actions': [
+          {
+            'name': 'claimed',
+            'style': 'primary',
+            'type': 'button',
+            'text': 'I got it!',
+            'value': 1
+          }
+        ]
+      }
+    ]
+  }
+
+  if (imagePath) {
+    payload['attachments'].push({
+      "fallback": "Here's a picture I took of the door:",
+      "color": "#36a64f",
+      "text": "Here's a picture I took of the door:",
+      "image_url": `${DOMAIN}${imagePath}`
+    });
+  }
+
+  return slack.post(config.slackApi.postMessageEndpoint, payload);
+}
+
 module.exports = (req, res) => {
   const { source_id, token } = req.body;
 
@@ -53,34 +94,21 @@ module.exports = (req, res) => {
       return;
     }
 
-    slack.post(config.slackApi.postMessageEndpoint, {
-      'channel': config.channelId,
-      'icon_emoji': ':door:',
-      'attachments': [
-        {
-          'fallback': 'Somebody is at the door!',
-          "mrkdwn_in": ["text"],
-          'attachment_type': 'default',
-          'callback_id': 'doorbell_claimed',
-          'color': 'warning',
-          'text': `*${getRandomNotificationMessage()}*`,
-          'actions': [
-            {
-              'name': 'claimed',
-              'style': 'primary',
-              'type': 'button',
-              'text': 'I got it!',
-              'value': 1
-            }
-          ]
-        }
-      ]
-    }).then((response) => { 
+    dorcam.get(config.cameraApi.getPhotoEndpoint)
+    .then((response) => {
+      return postSlackMessage(response.data.path);
+    })
+    .catch((error) => {
+      return postSlackMessage();
+    })
+    .then((response) => { 
       debugSlackApi('Slack request made!'); 
       if (!response.data.ok) {
         debugSlackApi('Slack responded with an error: ' + response.data.error);
       }
-    }).catch(slackApiErrorHandler);
+    })
+    .catch(slackApiErrorHandler);
+    
   } else {
     debugSlackApi("Token received in ring payload was invalid.");
     res.sendStatus(403);
