@@ -25,6 +25,6 @@ app.post('/slack-ic', handleSlackWebhook);
 
 app.post('/scrabblize', handleScrabbleCommand);
 
-app.listen(config.port, () => {
-  debugRouter(`App listening on port ${config.port}...`);
+app.listen(config.slackbotPort, () => {
+  debugRouter(`App listening on port ${config.slackbotPort}...`);
 });
