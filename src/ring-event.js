@@ -1,22 +1,24 @@
 const axios = require('axios');
 const debugSlackApi = require('debug')('dorbit-slackbot:slack-api');
 const errorSlackApi = require('debug')('dorbit-slackbot:slack-api-error');
+const config = require('../config');
+
+const SLACK_ACCESS_TOKEN = process.env.SLACK_ACCESS_TOKEN;
+const SOURCE_TOKEN = process.env.SOURCE_TOKEN;
 
 const slack = axios.create({
-  baseURL: process.env.SLACK_API_BASE_URL,
+  baseURL: config.slackApi.baseUrl,
   timeout: 5000,
   headers: {
     'Content-Type': 'application/json',
-    'Authorization': `Bearer ${process.env.SLACK_ACCESS_TOKEN}`
+    'Authorization': `Bearer ${SLACK_ACCESS_TOKEN}`
   }
 });
 
 const dorcam = axios.create({
-  baseURL: process.env.DORCAM_BASE_URL,
-  timeout: 5000
-})
-
-const slackDoorbellMessages = JSON.parse(process.env.SLACK_DOORBELL_MESSAGES);
+  baseURL: config.cameraApi.baseUrl,
+  timeout: 3000
+});
 
 function slackApiErrorHandler(error) {
   if (error.response) {
@@ -30,22 +32,29 @@ function slackApiErrorHandler(error) {
   }
 }
 
+function getRandomNotificationMessage() {
+  if (!config.notificationMessages || config.notificationMessages.length === 0) {
+    return 'Somebody is at the door!';
+  }
+  let messageIndex = Math.floor(Math.random() * config.notificationMessages.length);
+  return config.notificationMessages[messageIndex];
+}
+
 module.exports = (req, res) => {
   const { source_id, token } = req.body;
 
-  if (token === process.env.SOURCE_TOKEN) {
+  if (token === SOURCE_TOKEN) {
     debugSlackApi("Event from source: " + source_id);
     res.sendStatus(200);
-    let messageIndex = Math.floor(Math.random() * slackDoorbellMessages.length);
 
-    if (!process.env.SLACK_CHANNEL_ID) {
+    if (!config.channelId) {
       debugSlackApi('No channel id provided in environment'); 
       res.send(500);
       return;
     }
 
-    slack.post(process.env.SLACK_POST_MESSAGE_ENDPOINT, { 
-      'channel': process.env.SLACK_CHANNEL_ID,
+    slack.post(config.slackApi.postMessageEndpoint, {
+      'channel': config.channelId,
       'icon_emoji': ':door:',
       'attachments': [
         {
@@ -54,7 +63,7 @@ module.exports = (req, res) => {
           'attachment_type': 'default',
           'callback_id': 'doorbell_claimed',
           'color': 'warning',
-          'text': `*${slackDoorbellMessages[messageIndex]}*`,
+          'text': `*${getRandomNotificationMessage()}*`,
           'actions': [
             {
               'name': 'claimed',
