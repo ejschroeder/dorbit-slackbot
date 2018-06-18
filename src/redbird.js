@@ -9,7 +9,7 @@ var proxy = require('redbird')({
   port: 80,
   letsencrypt: {
     path: "/etc/ssl/private",
-    port: 3000
+    port: 9999
   },
   ssl: {
     port: 443
@@ -24,3 +24,5 @@ proxy.register(domain, `http://127.0.0.1:${config.slackbotPort}`, {
     }
   }
 });
+
+proxy.register(`${domain}/images`, `http://127.0.0.1:3000/images`);

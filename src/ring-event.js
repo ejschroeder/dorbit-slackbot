@@ -70,11 +70,12 @@ function postSlackMessage(imagePath) {
   }
 
   if (imagePath) {
+    debugSlackApi(`Built image url: https://${DOMAIN}${imagePath}`);
     payload['attachments'].push({
       "fallback": "Here's a picture I took of the door:",
       "color": "#36a64f",
       "text": "Here's a picture I took of the door:",
-      "image_url": `${DOMAIN}${imagePath}`
+      "image_url": `https://${DOMAIN}${imagePath}`
     });
   }
 
